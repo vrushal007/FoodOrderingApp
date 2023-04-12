@@ -1,23 +1,29 @@
 import Modal from '../UI/Modal';
 import classes from './Cart.module.css';
-import {Fragment, useContext, useState} from "react";
-import CartContext from "../../store/cart-context";
+import {Fragment, useState} from "react";
 import CartItem from "./CartItem";
 import Checkout from "./Checkout";
+import { useDispatch, useSelector } from 'react-redux';
+import { cartActions } from '../../store/cart-slice';
 
 const Cart = (props) => {
-    const cartCtx = useContext(CartContext)
-    const totalAmount = `$${cartCtx.totalAmount.toFixed(2)}`
-    const hasItems = cartCtx.items.length > 0
+    // const cartCtx = useContext(CartContext)
+    // const totalAmount = `$${cartCtx.totalAmount.toFixed(2)}`
+    // const hasItems = cartCtx.items.length > 0
     const [isCheckout,setIsCheckout] = useState(false);
     const [isSubmitting,setIsSubmitting] = useState(false)
     const [didSubmit,setDidSubmit] = useState(false)
 
+    const items = useSelector(state => state.cart.items)
+    const totalAmount = useSelector(state=>state.cart.totalAmount)
+    const hasItems = useSelector(state=>state.cart.items.length > 0)
+    const dispatch = useDispatch()
+
     const cartItemAddHandler = item => {
-        cartCtx.addItem(item)
+        dispatch(cartActions.addItem(item));
     };
     const cartItemRemoveHandler = id => {
-        cartCtx.removeItem(id)
+        dispatch(cartActions.removeItem(id))
     };
     const orderHandler = () => {
       setIsCheckout(true);
@@ -29,17 +35,21 @@ const Cart = (props) => {
             method:"POST",
             body:JSON.stringify({
                 user:userData,
-                orderedItems:cartCtx.items
+                orderedItems:items
             })
         })
-        cartCtx.clearCart();
+        dispatch(cartActions.replaceCart({
+            items:[],
+            totalAmount:0,
+            totaQuantity:0
+        }))
         setIsSubmitting(false)
         setDidSubmit(true)
     }
 
     const cartItems = (
         <ul className={classes['cart-items']}>
-            {cartCtx.items.map((item) => (
+            {items.map((item) => (
                <CartItem
                    key={item.id}
                    id={item.id}
@@ -64,7 +74,7 @@ const Cart = (props) => {
         {cartItems}
         <div className={classes.total}>
             <span>Total Amount</span>
-            <span>{totalAmount}</span>
+            <span>&#x20B9; {totalAmount}</span>
         </div>
         {isCheckout && <Checkout onCancel={props.onHideCart} onConfirm={submitOrderHandler}/>}
         {!isCheckout && ModalActions}

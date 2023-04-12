@@ -27,6 +27,7 @@ const AvailableMeals = () => {
                     price:responseData[key].price
                 });
             }
+            // console.log("loaded meals",loadedMeals)
             setMeals(loadedMeals);
             setIsLoading(false)
         }
